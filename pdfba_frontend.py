@@ -3,7 +3,6 @@ import os
 import gradio as gr
 from scanf import scanf
 import shutil
-import http.server
 import subprocess
 import yaml
 import uuid
@@ -16,18 +15,27 @@ from concurrent.futures import ThreadPoolExecutor
 # 创建线程池（最大50线程）
 executor = ThreadPoolExecutor(max_workers=50)
 
-# 后续全局变量的内容应从配置文件中加载
-# 工作目录
-#WORKING_FOLDER_NAME = '/Users/liwei135/pdfba'
-#WORKING_FOLDER_NAME = '/home/pdfba'
 
+
+def immediate_response(file_type, file_input):
+    """立即返回空响应"""
+    return "正在处理中，请稍后"
+
+def process_result(future):
+    """处理Future对象获取结果"""
+    try:
+        return future.result()
+    except Exception as e:
+        return f"错误: {str(e)}"
 
 def read_config(config_path, key_name):
     """
     通过正则表达式从配置文件提取 working_dir,ak等信息
     """
-    #config_path_dir = f"/Users/liwei135/PycharmProjects/pdfba/{config_path}"
+    #config_path_dir = f"/Users/liwei135/pdfba/{config_path}"
     config_path_dir = f"/home/pdfba/{config_path}"
+
+
 
     with open(config_path_dir, 'r') as f:
         config_text = f.read()
@@ -44,6 +52,7 @@ def read_config(config_path, key_name):
 
     # 去除可能的引号并处理路径
     result = match.group(1).strip('\'"')
+
     return result
 
 # The following variables associate strings with specific languages
@@ -57,14 +66,15 @@ def submit_task(file_type,file_input):
     #print("提交任务到线程池")
     future = executor.submit(translate_file, file_type, file_input)
 
-    return future.result()
+    return future
+    #return future.result()
 
 def run_mkdoc_server(html_link):
     # get  port from html_link
     # 提取 session_id 和 PORT
     # html_link的格式"[6049b15f-e9a7-43b0-b3cf-7b4834230df7/MapReduce.html](http://127.0.0.1:13988/translated_html/MapReduce.html)"
 
-    print("html_link:", html_link)
+    #print("run_mkdoc_server html_link:", html_link)
 
     result = scanf("[%s/%s](%s:%d/%s)", html_link)
 
@@ -76,9 +86,11 @@ def run_mkdoc_server(html_link):
         return
     WORKING_FOLDER_NAME=read_config('config.ini','working_dir')
 
+    print(WORKING_FOLDER_NAME)
+
     dir_name = f"{WORKING_FOLDER_NAME}/{session_id}"
     # 切换到工作 目录
-    #os.chdir(dir_name)
+    os.chdir(dir_name)
 
     # 定义配置内容（Python 字典格式）
     config = {
@@ -140,6 +152,7 @@ def translate_file(
     #session_id="d3c788fd-87a8-4a96-b4b3-6fd5e1a2e095"
 
     WORKING_FOLDER_NAME = read_config('config.ini', 'working_dir')
+    print(WORKING_FOLDER_NAME)
 
     # 基于session_id生成一个本地文件夹，这块不太合理，后续应该基于user id生成一个文件夹
     os.chdir(WORKING_FOLDER_NAME)
@@ -177,6 +190,7 @@ def translate_file(
     output_html_link = translate(str(filename), session_id)
 
     #print(f"Files after translation: {output_html_link}")
+    run_mkdoc_server(output_html_link)
 
     return output_html_link
 
@@ -286,14 +300,24 @@ with gr.Blocks(
 
     )
 
+    future_state = gr.State()  # 用于存储Future对象
+
     translate_btn.click(
-        submit_task,
+        fn=immediate_response,
         inputs=[
             file_type,
             file_input
         ],
         outputs=FE_OUTPUT_HTML_LINK
-    ).then(run_mkdoc_server, inputs=FE_OUTPUT_HTML_LINK)
+    ).then(
+        fn=submit_task,
+        inputs=[file_type, file_input],
+        outputs=future_state
+    ).then(
+        fn=process_result,
+        inputs=[future_state],  # 接收上一步的输出
+        outputs=FE_OUTPUT_HTML_LINK
+)
 
 
 def setup_gui(
@@ -311,6 +335,7 @@ def setup_gui(
     """
 
     try:
+        pdfba_ui.queue(default_concurrency_limit=50)
         pdfba_ui.launch(
             server_name="0.0.0.0",
             debug=False,
@@ -322,6 +347,7 @@ def setup_gui(
         print(
             "Error launching GUI using 0.0.0.0.\nThis may be caused by global mode of proxy software."
         )
+        print(f"启动失败: {str(Exception)}")
 
 
 # For auto-reloading while developing
