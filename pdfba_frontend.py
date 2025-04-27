@@ -76,7 +76,7 @@ def run_mkdoc_server(html_link):
 
     #print("run_mkdoc_server html_link:", html_link)
 
-    result = scanf("[%s/%s](%s:%d/%s)", html_link)
+    result = scanf("[%s/", html_link)
 
     if result:
         session_id = result[0]
@@ -107,15 +107,7 @@ def run_mkdoc_server(html_link):
     print("mkdocs.yml 已生成！")
 
     try:
-        """
-        # 使用 subprocess.Popen 启动 MkDocs 服务器（非阻塞方式）
-        process = subprocess.Popen(
-            ["mkdocs", "serve", "--dev-addr", f"0.0.0.0:{port}"],
-            cwd=dir_name,
-            text=True
-        )
-        print(f"MkDocs 服务器已启动，访问地址：http://0.0.0.0:{port}")
-        """
+
         output_dir = f"{WORKING_FOLDER_NAME}/{session_id}_h"
         process = subprocess.Popen(
             ["mkdocs", "build", "--site-dir", output_dir],
