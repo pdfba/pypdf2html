@@ -554,42 +554,6 @@ def add_http_img_tag(text, page_num, img_num):
     else:
         return "wrong"  # 如果没有匹配的结尾，返回原字符串
 
-""""
-def save_txt_with_img_tag(total_page_num, session_id):
-    # insert img tag
-    for page_num in range(total_page_num):
-        for coord in ALL_INSERT_PIC_X0_Y0_COORDINATE[page_num]:
-            if coord[1] > 0:
-                # only have img, no txt
-                if len(ALL_TXT_X0_Y0_COORDINATE[page_num]) == 0:
-                    index = 0
-                else:
-                    index = find_closest_number(ALL_TXT_X0_Y0_COORDINATE[page_num], coord)
-
-                ALL_INSERT_IMG_LOCATION[page_num].append(index)
-
-    for page_num in range(total_page_num):
-        in_file_path = f"{WORKING_FOLDER_NAME}/{session_id}/{TXT_FOLDER_NAME}/txt_only_{page_num}.txt"
-        if len(ALL_INSERT_IMG_LOCATION[page_num]) > 0:
-            with open(in_file_path, "r", encoding="utf-8") as file:
-                lines = file.readlines()  # 读取所有行
-        else:
-            continue
-
-        pic_num = 0
-        for row_num in ALL_INSERT_IMG_LOCATION[page_num]:
-            line = lines[row_num].rstrip("\n")
-            # print("line:",line)
-            modified_line = add_http_img_tag(line, page_num, pic_num)
-            # print("modified_line:",modified_line)
-            lines[row_num] = modified_line
-            pic_num += 1
-
-        # 将修改后的内容写回文件
-        out_file_path = f"{WORKING_FOLDER_NAME}/{session_id}/{TXT_FOLDER_NAME}/txt_only_{page_num}_img.txt"
-        with open(out_file_path, "w", encoding="utf-8") as file:
-            file.writelines(lines)
-"""
 
 def save_to_one_txt(total_page_num, txt_file_path, session_id):
     # 用于保存提取的内容
@@ -646,16 +610,11 @@ def translate_by_ai_agent_save_file(en_file_path, cn_file_path):
 
     TRANSLATE_RESULTS = []
 
-    '''
-    #阿里云
-    client = OpenAI(
-    # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx",
-    api_key="sk-40e9247b550a420e8e8007865b642d4c",  # 如何获取API Key：https://help.aliyun.com/zh/model-studio/developer-reference/get-api-key
-    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1")
-    '''
+
     ak = read_config('config.ini', 'ak')
 
-    client = OpenAI(api_key="sk-935fbb7802294c46a94927360b507282", base_url="https://api.deepseek.com")
+    #client = OpenAI(api_key=ak, base_url="https://api.deepseek.com")
+    client = OpenAI(api_key=ak, base_url="https://xiaoai.plus/v1")
 
     prompt="""请将英文内容翻译成中文。
     请严格遵循如下指令：
@@ -669,18 +628,12 @@ def translate_by_ai_agent_save_file(en_file_path, cn_file_path):
     8.token和tokens是专有名词，不需要翻译。
     """
 
-    # client = OpenAI(
-    #    base_url='https://qianfan.baidubce.com/v2',
-    #    api_key='bce-v3/ALTAK-98W5DqYhoaAHRx0O7NTfB/b2f1d3224196f73af9b3114d122b4947e92a1667'
-    # )
+
 
     # 初始化一个空列表，用于存储每次读取的内容
-    content_list = []
-    trans_content_list = []
     file_path = en_file_path
     file_path_trans = cn_file_path
 
-    cnt = 0
 
 
 
@@ -704,7 +657,8 @@ def translate_by_ai_agent_save_file(en_file_path, cn_file_path):
 
         response = client.chat.completions.create(
             # model="deepseek-r1",
-            model="deepseek-chat",
+            #model="deepseek-chat",
+            model="deepseek-v3",
             max_tokens=8000,  # 最大输出8K
             messages=[
                 {"role": "system", "content": prompt},
