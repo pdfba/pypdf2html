@@ -11,7 +11,7 @@
 当前也有不错的开源的PDF翻译软件，如PDFMathTranslate。  
 但开源软件的问题是安装较复杂，翻译速度较慢，一些较大的文件无法翻译。  
 
-事实上该项目的起因就是因为有一个超长的单页PDF文件我想用PDFMathTranslate翻译却翻译不出来。  
+事实上该项目的起因就是因为有一个超长的单页PDF文件，<a href="https://huggingface.co/spaces/nanotron/ultrascale-playbook/resolve/4ce82eab1c6a0ab2e14b831fa70ad73235cf64e3/The_Ultra-Scale_Playbook_Training_LLMs_on_GPU_Clusters.pdf">"The Ultra Scale Playbook Training LLMs on GPU Clusters"</a>，想用PDFMathTranslate翻译却翻译不出来。  
 我想看看它的后端代码哪里出来问题。  
 但他的后端代码写的我实在看不懂。  
 我就想是不是可以通过大模型编码的方式来解决？  
